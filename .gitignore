@@ -1,0 +1,7 @@
+.dist/
+vizion/.env
+vizion/backend/celerybeat-schedule
+**/__pycache__/
+**/*.pyc
+**/node_modules/
+**/dist/
