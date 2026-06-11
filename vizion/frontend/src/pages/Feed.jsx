@@ -12,7 +12,7 @@ export default function Feed() {
   const load = async () => {
     setLoading(true);
     try {
-      const feedRequest = tab === "feed" ? api.get("/feed/") : api.get("/feed/semantic/");
+      const feedRequest = tab === "feed" ? api.get("/feed/home/") : api.get("/feed/semantic/");
       const [feedRes, storiesRes] = await Promise.all([
         feedRequest,
         api.get("/stories/feed/").catch(() => ({ data: [] })),

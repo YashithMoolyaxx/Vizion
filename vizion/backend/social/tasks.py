@@ -4,6 +4,7 @@ from celery import shared_task
 from django.db import connection
 from django.utils import timezone
 
+from .feed_timeline import fanout_post_to_home_feeds, rebuild_following_cache_after_relationship_change, rebuild_home_feed_cache, remove_creator_from_home_feed
 from .models import Collection, EngagementEvent, Post, PostInsight, SavedPost, Story
 
 
@@ -84,3 +85,24 @@ def generate_post_insights():
 @shared_task
 def cleanup_expired_stories():
     Story.objects.filter(expires_at__lte=timezone.now()).delete()
+
+
+@shared_task
+def fanout_home_post(post_id):
+    post = Post.objects.select_related("user").get(id=post_id)
+    fanout_post_to_home_feeds(post)
+
+
+@shared_task
+def rebuild_home_feed(user_id):
+    rebuild_home_feed_cache(user_id)
+
+
+@shared_task
+def refresh_home_feed_after_follow_change(user_id):
+    rebuild_following_cache_after_relationship_change(user_id)
+
+
+@shared_task
+def remove_creator_posts_from_feed(follower_id, creator_id):
+    remove_creator_from_home_feed(follower_id, creator_id)

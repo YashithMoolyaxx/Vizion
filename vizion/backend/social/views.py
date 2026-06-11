@@ -17,6 +17,7 @@ from rest_framework.response import Response
 from users.serializers import UserSerializer
 
 from .embeddings import refresh_post_embedding
+from .feed_timeline import get_home_feed_posts
 from .models import ChatRoom, Collection, Comment, EngagementEvent, Follow, Like, Message, Notification, Post, SavedPost, Story, StoryView
 from .recommendations import build_user_interest_embedding, find_top_semantic_posts
 from .serializers import (
@@ -29,7 +30,7 @@ from .serializers import (
     SavedPostSerializer,
     StorySerializer,
 )
-from .tasks import auto_categorize_saved_post
+from .tasks import auto_categorize_saved_post, fanout_home_post, refresh_home_feed_after_follow_change, remove_creator_posts_from_feed
 from .utils import broadcast_chat_message, create_chat_message, create_notification, get_dm_room
 
 User = get_user_model()
@@ -52,20 +53,25 @@ class PostListCreateView(generics.ListCreateAPIView):
         ctx["request"] = self.request
         return ctx
 
-    def perform_create(self, serializer):
+def perform_create(self, serializer):
         post = serializer.save(user=self.request.user)
         refresh_post_embedding(post)
+        transaction.on_commit(lambda: fanout_home_post.delay(post.id))
 
 
 @api_view(["GET"])
 @permission_classes([permissions.IsAuthenticated])
-def feed(request):
-    following_ids = Follow.objects.filter(follower=request.user, status="accepted").values_list("following_id", flat=True)
-    queryset = Post.objects.filter(user_id__in=list(following_ids) + [request.user.id]).select_related("user").order_by("-created_at")
-    paginator = FeedPagination()
-    page = paginator.paginate_queryset(queryset, request)
-    serializer = PostSerializer(page, many=True, context={"request": request})
-    return paginator.get_paginated_response(serializer.data)
+def home_feed(request):
+    try:
+        limit = max(1, min(int(request.query_params.get("limit", 20)), 50))
+    except (TypeError, ValueError):
+        limit = 20
+    posts = get_home_feed_posts(request.user, limit=limit)
+    serializer = PostSerializer(posts, many=True, context={"request": request})
+    return Response(serializer.data)
+
+
+feed = home_feed
 
 
 @api_view(["GET"])
@@ -321,6 +327,8 @@ def follow_user(request, user_id):
         request.user.following_count = max(0, request.user.following_count - 1)
         target.save(update_fields=["followers_count"])
         request.user.save(update_fields=["following_count"])
+        transaction.on_commit(lambda: remove_creator_posts_from_feed.delay(request.user.id, target.id))
+        transaction.on_commit(lambda: refresh_home_feed_after_follow_change.delay(request.user.id))
         return Response({"following": False, "status": None})
 
     if follow and follow.status == "pending":
@@ -339,6 +347,7 @@ def follow_user(request, user_id):
         target.save(update_fields=["followers_count"])
         request.user.save(update_fields=["following_count"])
         create_notification(target, request.user, "follow")
+        transaction.on_commit(lambda: refresh_home_feed_after_follow_change.delay(request.user.id))
 
     return Response({"following": status_value == "accepted", "status": status_value, "id": follow.id})
 
