@@ -50,6 +50,13 @@ Vizion is an analytics-first social media platform for creators, built with Djan
 4. Django admin/API:
    - `http://localhost/api/`
 
+## Deployment Notes
+
+- Set `SEED_DEMO=0` in production to skip demo content seeding.
+- Keep `VITE_API_URL=/api` so the frontend talks to the reverse proxy.
+- Set a strong `DJANGO_SECRET_KEY`, `MYSQL_ROOT_PASSWORD`, `MYSQL_PASSWORD`, and `ALLOWED_HOSTS` before going live.
+- The stack is designed to run behind `nginx` with the frontend at `/` and Django at `/api/`.
+
 ## Backend development (without Docker)
 
 1. Create venv and install:
