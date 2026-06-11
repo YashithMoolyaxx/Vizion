@@ -12,12 +12,12 @@ export default function Feed() {
   const load = async () => {
     setLoading(true);
     try {
-      const [feedRes, exploreRes, storiesRes] = await Promise.all([
-        api.get("/feed/"),
-        api.get("/posts/"),
+      const feedRequest = tab === "feed" ? api.get("/feed/") : api.get("/feed/semantic/");
+      const [feedRes, storiesRes] = await Promise.all([
+        feedRequest,
         api.get("/stories/feed/").catch(() => ({ data: [] })),
       ]);
-      setPosts(tab === "feed" ? feedRes.data.results || feedRes.data : exploreRes.data.results || exploreRes.data);
+      setPosts(feedRes.data.results || feedRes.data);
       setStories(storiesRes.data || []);
     } finally {
       setLoading(false);
@@ -62,7 +62,7 @@ export default function Feed() {
           onClick={() => setTab("explore")}
           className={`flex-1 py-2 text-sm rounded ${tab === "explore" ? "bg-white shadow-sm font-medium" : "text-muted"}`}
         >
-          For you
+          Discover
         </button>
       </div>
 
@@ -75,7 +75,7 @@ export default function Feed() {
       ) : posts.length === 0 ? (
         <div className="card p-10 text-center">
           <p className="font-medium">No posts in this feed</p>
-          <p className="text-sm text-muted mt-1">Follow creators or switch to For you</p>
+          <p className="text-sm text-muted mt-1">Follow creators or switch to Discover</p>
         </div>
       ) : (
         posts.map((post) => <PostCard key={post.id} post={post} onUpdate={load} />)

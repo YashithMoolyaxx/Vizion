@@ -16,7 +16,9 @@ from rest_framework.response import Response
 
 from users.serializers import UserSerializer
 
+from .embeddings import refresh_post_embedding
 from .models import ChatRoom, Collection, Comment, EngagementEvent, Follow, Like, Message, Notification, Post, SavedPost, Story, StoryView
+from .recommendations import build_user_interest_embedding, find_top_semantic_posts
 from .serializers import (
     ChatRoomSerializer,
     CollectionSerializer,
@@ -51,7 +53,8 @@ class PostListCreateView(generics.ListCreateAPIView):
         return ctx
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        post = serializer.save(user=self.request.user)
+        refresh_post_embedding(post)
 
 
 @api_view(["GET"])
@@ -65,6 +68,57 @@ def feed(request):
     return paginator.get_paginated_response(serializer.data)
 
 
+@api_view(["GET"])
+@permission_classes([permissions.IsAuthenticated])
+def semantic_feed(request):
+    try:
+        limit = max(1, min(int(request.query_params.get("limit", 20)), 50))
+    except (TypeError, ValueError):
+        limit = 20
+
+    target_embedding = build_user_interest_embedding(request.user, limit=20)
+    excluded_post_ids = set(
+        Like.objects.filter(user=request.user).values_list("post_id", flat=True)
+    ) | set(
+        SavedPost.objects.filter(user=request.user).values_list("post_id", flat=True)
+    )
+
+    if target_embedding:
+        posts = find_top_semantic_posts(
+            target_embedding,
+            limit=limit,
+            exclude_user_id=request.user.id,
+            exclude_post_ids=excluded_post_ids,
+        )
+    else:
+        posts = list(
+            Post.objects.exclude(user=request.user)
+            .select_related("user")
+            .order_by("-created_at")[:limit]
+        )
+
+    serializer = PostSerializer(posts, many=True, context={"request": request})
+    return Response(serializer.data)
+
+
+EXT_BY_MIME = {
+    "image/jpeg": ".jpg",
+    "image/png": ".png",
+    "image/gif": ".gif",
+    "image/webp": ".webp",
+    "image/heic": ".heic",
+    "image/heif": ".heif",
+    "video/mp4": ".mp4",
+    "video/webm": ".webm",
+    "video/quicktime": ".mov",
+    "audio/mpeg": ".mp3",
+    "audio/wav": ".wav",
+    "audio/ogg": ".ogg",
+    "audio/mp4": ".m4a",
+    "audio/aac": ".aac",
+}
+
+
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
 def upload_media(request):
@@ -72,13 +126,16 @@ def upload_media(request):
     if not file:
         return Response({"detail": "file required"}, status=400)
     ext = os.path.splitext(file.name)[1].lower()
-    allowed = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".mp4", ".webm", ".mov", ".mp3", ".wav", ".ogg", ".m4a", ".aac"}
+    if not ext:
+        ext = EXT_BY_MIME.get(file.content_type, "")
+    allowed = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".heic", ".heif", ".mp4", ".webm", ".mov", ".mp3", ".wav", ".ogg", ".m4a", ".aac"}
     if ext not in allowed:
-        return Response({"detail": "unsupported file type"}, status=400)
+        return Response({"detail": f"unsupported file type ({ext or file.content_type})"}, status=400)
     name = f"uploads/{uuid.uuid4().hex}{ext}"
     path = default_storage.save(name, file)
-    url = request.build_absolute_uri(settings.MEDIA_URL + path)
-    return Response({"url": url, "path": settings.MEDIA_URL + path})
+    media_path = settings.MEDIA_URL + path
+    url = request.build_absolute_uri(media_path)
+    return Response({"url": url, "path": media_path})
 
 
 @api_view(["GET"])
@@ -256,30 +313,52 @@ def follow_user(request, user_id):
     if user_id == request.user.id:
         return Response({"detail": "cannot follow yourself"}, status=400)
     target = get_object_or_404(User, id=user_id)
+    follow = Follow.objects.filter(follower=request.user, following=target).first()
+
+    if follow and follow.status == "accepted":
+        follow.delete()
+        target.followers_count = max(0, target.followers_count - 1)
+        request.user.following_count = max(0, request.user.following_count - 1)
+        target.save(update_fields=["followers_count"])
+        request.user.save(update_fields=["following_count"])
+        return Response({"following": False, "status": None})
+
+    if follow and follow.status == "pending":
+        follow.delete()
+        return Response({"following": False, "status": None})
+
+    if follow and follow.status == "rejected":
+        follow.delete()
+
     status_value = "pending" if target.is_private else "accepted"
-    follow, created = Follow.objects.get_or_create(
-        follower=request.user, following=target, defaults={"status": status_value}
-    )
-    if not created and follow.status == "rejected":
-        follow.status = status_value
-        follow.save(update_fields=["status"])
-    if created and status_value == "accepted":
+    follow = Follow.objects.create(follower=request.user, following=target, status=status_value)
+
+    if status_value == "accepted":
         target.followers_count += 1
         request.user.following_count += 1
         target.save(update_fields=["followers_count"])
         request.user.save(update_fields=["following_count"])
         create_notification(target, request.user, "follow")
-    return Response({"id": follow.id, "status": follow.status})
+
+    return Response({"following": status_value == "accepted", "status": status_value, "id": follow.id})
 
 
 @api_view(["GET"])
 @permission_classes([permissions.IsAuthenticated])
 def user_profile(request, username):
     user = get_object_or_404(User, username=username)
-    is_following = Follow.objects.filter(follower=request.user, following=user, status="accepted").exists()
+    follow = Follow.objects.filter(follower=request.user, following=user).first()
+    is_following = bool(follow and follow.status == "accepted")
     posts_count = Post.objects.filter(user=user).count()
     data = UserSerializer(user).data
-    data.update({"is_following": is_following, "posts_count": posts_count, "is_me": user.id == request.user.id})
+    data.update(
+        {
+            "is_following": is_following,
+            "follow_status": follow.status if follow else None,
+            "posts_count": posts_count,
+            "is_me": user.id == request.user.id,
+        }
+    )
     if not data.get("avatar_url"):
         data["avatar_url"] = user.profile_picture or f"https://api.dicebear.com/7.x/notionists/svg?seed={user.username}"
     return Response(data)

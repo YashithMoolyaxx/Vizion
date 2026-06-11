@@ -8,6 +8,7 @@ from .views import (
     create_comment,
     create_story,
     feed,
+    semantic_feed,
     follow_user,
     get_chat_room,
     get_heatmap,
@@ -34,6 +35,7 @@ from .views import (
 urlpatterns = [
     path("posts/", PostListCreateView.as_view(), name="posts"),
     path("feed/", feed, name="feed"),
+    path("feed/semantic/", semantic_feed, name="semantic-feed"),
     path("upload/", upload_media, name="upload"),
     path("posts/<int:post_id>/", post_detail, name="post-detail"),
     path("posts/<int:post_id>/like/", toggle_like, name="toggle-like"),

@@ -14,6 +14,8 @@ class Post(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="posts")
     image = models.URLField()
     caption = models.TextField(blank=True, default="")
+    embedding = models.JSONField(null=True, blank=True)
+    embedding_norm = models.FloatField(default=0.0)
     created_at = models.DateTimeField(auto_now_add=True)
     likes_count = models.IntegerField(default=0)
     comments_count = models.IntegerField(default=0)
