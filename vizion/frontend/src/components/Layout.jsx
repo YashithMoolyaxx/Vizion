@@ -3,6 +3,7 @@ import { Home, Search, PlusSquare, MessageCircle, Bell, Bookmark, LogOut } from 
 import { useAuthStore } from "../store/authStore";
 import { avatarUrl } from "../lib/avatar";
 import Logo from "./Logo";
+import ThemeToggle from "./ThemeToggle";
 
 const nav = [
   { to: "/", icon: Home, label: "Home" },
@@ -19,7 +20,12 @@ export default function Layout({ children }) {
   const inChat = location.pathname.startsWith("/messages/");
 
   return (
-    <div className="min-h-screen bg-[#f4f4f5] text-ink">
+    <div className="min-h-screen bg-page text-ink">
+      {inChat && (
+        <div className="fixed top-4 right-4 z-50">
+          <ThemeToggle />
+        </div>
+      )}
       {!inChat && (
         <header className="fixed top-0 left-0 right-0 z-40 border-b border-line/80 bg-white/90 backdrop-blur-md">
           <div className="max-w-6xl mx-auto flex items-center justify-between px-4 h-14">
@@ -27,6 +33,7 @@ export default function Layout({ children }) {
               <Logo size="sm" />
             </Link>
             <div className="flex items-center gap-3">
+              <ThemeToggle />
               {user && (
                 <Link
                   to={`/profile/${user.username}`}

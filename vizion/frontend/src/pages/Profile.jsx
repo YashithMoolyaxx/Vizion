@@ -116,7 +116,7 @@ export default function Profile() {
               </div>
             ) : (
               <>
-                <p className="text-sm text-neutral-600">{profile.bio || "Add a bio to tell people about you."}</p>
+                <p className="text-sm text-muted">{profile.bio || "Add a bio to tell people about you."}</p>
                 <button type="button" onClick={() => setEditing(true)} className="btn-secondary mt-3 text-xs">
                   Edit profile
                 </button>
@@ -124,7 +124,7 @@ export default function Profile() {
             )}
           </div>
         ) : (
-          profile.bio && <p className="mt-4 text-sm text-neutral-600">{profile.bio}</p>
+          profile.bio && <p className="mt-4 text-sm text-muted">{profile.bio}</p>
         )}
       </div>
 

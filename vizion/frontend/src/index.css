@@ -5,47 +5,153 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    color-scheme: light;
+    --page: #f4f4f5;
+    --surface: #ffffff;
+    --surface-soft: #fafafa;
+    --panel: #fafafa;
+    --text: #0a0a0a;
+    --muted: #737373;
+    --line: #e5e5e5;
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.06);
+    --auth-glow-1: rgba(99, 102, 241, 0.18);
+    --auth-glow-2: rgba(14, 165, 233, 0.1);
+    --auth-bg: #f4f4f5;
+  }
+
+  html[data-theme="dark"] {
+    color-scheme: dark;
+    --page: #0b1020;
+    --surface: #121826;
+    --surface-soft: #161f32;
+    --panel: #111827;
+    --text: #f4f4f5;
+    --muted: #9ca3af;
+    --line: rgba(148, 163, 184, 0.2);
+    --shadow-card: 0 16px 36px rgba(0, 0, 0, 0.35);
+    --auth-glow-1: rgba(99, 102, 241, 0.22);
+    --auth-glow-2: rgba(14, 165, 233, 0.16);
+    --auth-bg: #0b1020;
+  }
+
   html {
     @apply antialiased;
   }
+  body,
+  html {
+    background-color: var(--page);
+    color: var(--text);
+  }
   body {
-    @apply bg-[#f4f4f5] text-ink font-sans;
+    @apply font-sans;
+    transition: background-color 180ms ease, color 180ms ease;
   }
 }
 
 @layer components {
   .card {
-    @apply bg-white border border-line/80 rounded-2xl shadow-card;
+    background-color: var(--surface);
+    border-color: var(--line);
+    @apply border rounded-2xl;
+    box-shadow: var(--shadow-card);
   }
   .btn-primary {
     @apply inline-flex items-center justify-center bg-gradient-to-r from-violet-600 via-indigo-600 to-sky-600 text-white text-sm font-medium px-4 py-2.5 rounded-xl hover:from-violet-700 hover:via-indigo-700 hover:to-sky-700 transition shadow-md shadow-indigo-500/20 disabled:opacity-50 disabled:shadow-none;
   }
   .btn-secondary {
-    @apply inline-flex items-center justify-center border border-line bg-white text-ink text-sm font-medium px-4 py-2.5 rounded-xl hover:bg-panel transition;
+    background-color: var(--surface);
+    color: var(--text);
+    border-color: var(--line);
+    @apply inline-flex items-center justify-center border text-sm font-medium px-4 py-2.5 rounded-xl transition;
   }
   .input {
-    @apply w-full border border-line rounded-xl px-3 py-2.5 text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/15 bg-white transition;
+    background-color: var(--surface);
+    color: var(--text);
+    border-color: var(--line);
+    @apply w-full border rounded-xl px-3 py-2.5 text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/15 transition;
   }
   .nav-active {
     @apply bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-medium shadow-sm shadow-indigo-500/20;
   }
   .nav-item {
-    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-neutral-600 hover:bg-panel transition;
+    color: var(--muted);
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition;
   }
   .nav-active.nav-item {
     @apply text-white hover:from-violet-700 hover:to-indigo-700;
   }
   .auth-bg {
     background:
-      radial-gradient(ellipse 80% 60% at 50% -10%, rgba(99, 102, 241, 0.18), transparent),
-      radial-gradient(ellipse 50% 40% at 100% 50%, rgba(14, 165, 233, 0.1), transparent),
-      #f4f4f5;
+      radial-gradient(ellipse 80% 60% at 50% -10%, var(--auth-glow-1), transparent),
+      radial-gradient(ellipse 50% 40% at 100% 50%, var(--auth-glow-2), transparent),
+      var(--auth-bg);
+  }
+  .bg-page {
+    background-color: var(--page);
+  }
+  .bg-panel {
+    background-color: var(--panel);
+  }
+  .bg-white {
+    background-color: var(--surface);
+  }
+  .text-ink {
+    color: var(--text);
+  }
+  .text-muted {
+    color: var(--muted);
+  }
+  .border-line {
+    border-color: var(--line);
   }
 }
 
 @layer utilities {
   .shadow-elevated {
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 12px 32px -4px rgba(99, 102, 241, 0.12);
+  }
+
+  html[data-theme="dark"] [class*="bg-white"] {
+    background-color: var(--surface) !important;
+  }
+
+  html[data-theme="dark"] [class*="bg-panel"] {
+    background-color: var(--panel) !important;
+  }
+
+  html[data-theme="dark"] [class*="text-ink"] {
+    color: var(--text) !important;
+  }
+
+  html[data-theme="dark"] [class*="text-muted"] {
+    color: var(--muted) !important;
+  }
+
+  html[data-theme="dark"] [class*="border-line"] {
+    border-color: var(--line) !important;
+  }
+
+  html[data-theme="dark"] .hover\:bg-white:hover {
+    background-color: var(--surface) !important;
+  }
+
+  html[data-theme="dark"] .hover\:bg-panel:hover {
+    background-color: var(--surface-soft) !important;
+  }
+
+  html[data-theme="dark"] .bg-indigo-50,
+  html[data-theme="dark"] .bg-indigo-50\/80,
+  html[data-theme="dark"] .bg-indigo-50\/50,
+  html[data-theme="dark"] .bg-indigo-50\/15,
+  html[data-theme="dark"] .bg-violet-50,
+  html[data-theme="dark"] .bg-sky-50 {
+    background-color: rgba(99, 102, 241, 0.14) !important;
+  }
+
+  html[data-theme="dark"] .text-indigo-600,
+  html[data-theme="dark"] .text-indigo-700 {
+    color: #a5b4fc !important;
   }
 }
 

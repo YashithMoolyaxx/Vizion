@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "react-hot-toast";
 
 import "./index.css";
+import { applyTheme, getStoredTheme } from "./lib/theme";
 import { useAuthStore } from "./store/authStore";
 import Layout from "./components/Layout";
 import Login from "./pages/Login";
@@ -20,6 +21,7 @@ import PostPage from "./pages/PostPage";
 import Saved from "./pages/Saved";
 
 const queryClient = new QueryClient();
+applyTheme(getStoredTheme());
 
 function Protected({ children }) {
   const { user, loading } = useAuthStore();
@@ -61,9 +63,9 @@ function App() {
         position="top-center"
         toastOptions={{
           style: {
-            background: "#fff",
-            color: "#0a0a0a",
-            border: "1px solid #e5e5e5",
+            background: "var(--surface)",
+            color: "var(--text)",
+            border: "1px solid var(--line)",
             fontSize: "14px",
           },
         }}

@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useAuthStore } from "../store/authStore";
 import Logo from "../components/Logo";
+import ThemeToggle from "../components/ThemeToggle";
 
 export default function Register() {
   const [username, setUsername] = useState("");
@@ -27,7 +28,10 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 auth-bg">
+    <div className="min-h-screen flex items-center justify-center px-4 auth-bg relative">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
       <div className="card w-full max-w-md p-8 shadow-elevated">
         <div className="flex justify-center mb-4">
           <Logo size="md" />
