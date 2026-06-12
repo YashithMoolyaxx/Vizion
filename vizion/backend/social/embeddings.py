@@ -3,7 +3,7 @@ import json
 import math
 import os
 import re
-from typing import Iterable, Sequence
+from typing import Iterable, List, Optional, Sequence
 from urllib import error, request
 
 EMBEDDING_DIMENSIONS = int(os.getenv("SEMANTIC_EMBEDDING_DIMENSIONS", "1536"))
@@ -89,7 +89,7 @@ def _normalize_token(token: str) -> str:
     return token
 
 
-def _tokenize(text: str) -> list[str]:
+def _tokenize(text: str) -> List[str]:
     tokens = []
     for raw_token in TOKEN_RE.findall(_normalize_text(text)):
         token = _normalize_token(raw_token)
@@ -98,9 +98,9 @@ def _tokenize(text: str) -> list[str]:
     return tokens
 
 
-def _feature_stream(text: str) -> list[tuple[str, float]]:
+def _feature_stream(text: str) -> List[tuple]:
     tokens = _tokenize(text)
-    features: list[tuple[str, float]] = []
+    features: List[tuple] = []
 
     for token in tokens:
         features.append((f"tok:{token}", 1.0))
@@ -123,14 +123,14 @@ def _hash_feature(feature: str) -> tuple[int, float]:
     return index, sign * magnitude
 
 
-def _normalize_vector(vector: Sequence[float]) -> list[float]:
+def _normalize_vector(vector: Sequence[float]) -> List[float]:
     norm = math.sqrt(sum(value * value for value in vector))
     if not norm:
         return [0.0 for _ in vector]
     return [value / norm for value in vector]
 
 
-def local_text_embedding(text: str) -> list[float]:
+def local_text_embedding(text: str) -> List[float]:
     vector = [0.0] * EMBEDDING_DIMENSIONS
     for feature, weight in _feature_stream(text):
         index, contribution = _hash_feature(feature)
@@ -138,7 +138,7 @@ def local_text_embedding(text: str) -> list[float]:
     return _normalize_vector(vector)
 
 
-def generate_text_embedding(text: str) -> list[float]:
+def generate_text_embedding(text: str) -> List[float]:
     normalized_text = text or ""
     if not normalized_text.strip():
         return [0.0] * EMBEDDING_DIMENSIONS
@@ -170,7 +170,7 @@ def vector_norm(embedding: Sequence[float]) -> float:
     return math.sqrt(sum(float(value) * float(value) for value in embedding))
 
 
-def average_embeddings(embeddings: Iterable[Sequence[float]]) -> list[float] | None:
+def average_embeddings(embeddings: Iterable[Sequence[float]]) -> Optional[List[float]]:
     vectors = [list(map(float, embedding)) for embedding in embeddings if embedding]
     if not vectors:
         return None
@@ -191,7 +191,7 @@ def build_post_embedding_text(post) -> str:
     return caption.strip()
 
 
-def refresh_post_embedding(post) -> list[float]:
+def refresh_post_embedding(post) -> List[float]:
     embedding = generate_text_embedding(build_post_embedding_text(post))
     post.embedding = embedding
     post.embedding_norm = vector_norm(embedding)

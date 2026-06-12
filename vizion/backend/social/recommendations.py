@@ -1,6 +1,6 @@
 from heapq import heappush, heappushpop
 from math import sqrt
-from typing import Sequence, Tuple
+from typing import Optional, Sequence, Tuple
 
 from .embeddings import average_embeddings, generate_text_embedding, vector_norm
 from .models import Like, Post, SavedPost
@@ -26,8 +26,8 @@ def _cosine_similarity(target_embedding: Sequence[float], target_norm: float, ca
 def find_top_semantic_posts(
     target_embedding: Sequence[float],
     limit: int = 5,
-    exclude_user_id: int | None = None,
-    exclude_post_ids: Sequence[int] | None = None,
+    exclude_user_id: Optional[int] = None,
+    exclude_post_ids: Optional[Sequence[int]] = None,
 ):
     if not target_embedding:
         return []

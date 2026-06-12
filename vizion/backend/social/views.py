@@ -163,9 +163,17 @@ def list_comments(request, post_id):
 @permission_classes([permissions.IsAuthenticated])
 def save_post(request, post_id):
     post = get_object_or_404(Post, id=post_id)
-    saved, _ = SavedPost.objects.get_or_create(user=request.user, post=post)
-    transaction.on_commit(lambda: auto_categorize_saved_post.delay(request.user.id, post.id, post.caption))
-    return Response(SavedPostSerializer(saved, context={"request": request}).data, status=status.HTTP_201_CREATED)
+    saved_post = SavedPost.objects.filter(user=request.user, post=post).first()
+    
+    if saved_post:
+        # Unsave
+        saved_post.delete()
+        return Response({"is_saved": False}, status=status.HTTP_200_OK)
+    else:
+        # Save
+        saved_post = SavedPost.objects.create(user=request.user, post=post)
+        transaction.on_commit(lambda: auto_categorize_saved_post.delay(request.user.id, post.id, post.caption))
+        return Response(SavedPostSerializer(saved_post, context={"request": request}).data, status=status.HTTP_201_CREATED)
 
 
 class CollectionListView(generics.ListAPIView):

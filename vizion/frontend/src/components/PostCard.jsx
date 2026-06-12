@@ -23,9 +23,14 @@ export default function PostCard({ post, onUpdate }) {
   };
 
   const toggleSave = async () => {
-    await api.post(`/posts/${post.id}/save/`);
-    setSaved(true);
-    toast.success("Saved to collection");
+    try {
+      const { data } = await api.post(`/posts/${post.id}/save/`);
+      const newSaved = data.is_saved !== false;
+      setSaved(newSaved);
+      toast.success(newSaved ? "Saved to collection" : "Removed from collection");
+    } catch {
+      toast.error("Failed to save post");
+    }
   };
 
   const sharePost = async () => {
