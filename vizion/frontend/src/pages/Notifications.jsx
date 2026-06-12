@@ -21,9 +21,9 @@ export default function Notifications() {
 
   return (
     <div className="max-w-lg mx-auto px-4 py-6">
-      <h1 className="text-lg font-semibold mb-4">Activity</h1>
+      <h1 className="text-lg font-semibold mb-4">Notifications</h1>
       {notifs.length === 0 ? (
-        <div className="card p-10 text-center text-sm text-muted">No activity yet</div>
+        <div className="card p-10 text-center text-sm text-muted">No notifications yet</div>
       ) : (
         <div className="card divide-y divide-line">
           {notifs.map((n) => {

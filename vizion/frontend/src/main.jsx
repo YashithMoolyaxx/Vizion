@@ -17,6 +17,7 @@ import Messages from "./pages/Messages";
 import Chat from "./pages/Chat";
 import Notifications from "./pages/Notifications";
 import PostPage from "./pages/PostPage";
+import Saved from "./pages/Saved";
 
 const queryClient = new QueryClient();
 

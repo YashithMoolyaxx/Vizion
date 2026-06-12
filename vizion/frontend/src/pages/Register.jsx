@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useAuthStore } from "../store/authStore";
+import Logo from "../components/Logo";
 
 export default function Register() {
   const [username, setUsername] = useState("");
@@ -26,10 +27,12 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-panel px-4">
-      <div className="card w-full max-w-md p-8">
-        <h1 className="text-xl font-semibold mb-1">Create your account</h1>
-        <p className="text-sm text-muted mb-6">Join Vizion to publish and analyze content.</p>
+    <div className="min-h-screen flex items-center justify-center px-4 auth-bg">
+      <div className="card w-full max-w-md p-8 shadow-elevated">
+        <div className="flex justify-center mb-4">
+          <Logo size="md" />
+        </div>
+        <p className="text-sm text-muted mb-6 text-center">Join Vizion to publish and analyze content.</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -51,14 +54,14 @@ export default function Register() {
               required
             />
           </div>
-          <button type="submit" disabled={loading} className="btn-primary w-full">
+          <button type="submit" disabled={loading} className="btn-primary w-full py-3">
             {loading ? "Creating…" : "Create account"}
           </button>
         </form>
 
         <p className="text-center text-sm text-muted mt-6">
           Already have an account?{" "}
-          <Link to="/login" className="text-ink font-medium underline underline-offset-2">
+            <Link to="/login" className="text-indigo-600 font-medium hover:text-indigo-700">
             Sign in
           </Link>
         </p>

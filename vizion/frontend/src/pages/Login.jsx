@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useAuthStore } from "../store/authStore";
+import Logo from "../components/Logo";
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -25,12 +26,14 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-panel px-4">
+    <div className="min-h-screen flex items-center justify-center px-4 auth-bg">
       <div className="w-full max-w-md">
-        <div className="card p-8">
+        <div className="card p-8 shadow-elevated">
           <div className="mb-8 text-center">
-            <h1 className="text-2xl font-semibold tracking-tight">Vizion</h1>
-            <p className="text-sm text-muted mt-1">Creator analytics platform</p>
+            <div className="flex justify-center mb-4">
+              <Logo size="lg" />
+            </div>
+            <p className="text-sm text-muted">Creator analytics & social platform</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -55,23 +58,20 @@ export default function Login() {
                 required
               />
             </div>
-            <button type="submit" disabled={loading} className="btn-primary w-full mt-2">
+            <button type="submit" disabled={loading} className="btn-primary w-full mt-2 py-3">
               {loading ? "Signing in…" : "Sign in"}
             </button>
           </form>
 
           <p className="text-center text-sm text-muted mt-6">
             New here?{" "}
-            <Link to="/register" className="text-ink font-medium underline underline-offset-2">
+            <Link to="/register" className="text-indigo-600 font-medium hover:text-indigo-700">
               Create account
             </Link>
           </p>
         </div>
 
-        <p className="text-center text-xs text-muted mt-4">
-          Secured with JWT access tokens, HttpOnly refresh cookies, and server sessions.
-        </p>
-        <p className="text-center text-xs text-muted mt-1">Demo: alex_creator / demo1234</p>
+        <p className="text-center text-xs text-muted mt-4">Demo: alex_creator / demo1234</p>
       </div>
     </div>
   );

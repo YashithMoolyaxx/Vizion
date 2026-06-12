@@ -6,6 +6,7 @@ import { api } from "../api";
 import { getAccessToken } from "../lib/auth";
 import { avatarUrl } from "../lib/avatar";
 import { mediaTypeFromFile } from "../lib/media";
+import { uploadFile } from "../lib/upload";
 import { useAuthStore } from "../store/authStore";
 import MessageBubble from "../components/MessageBubble";
 
@@ -120,13 +121,9 @@ export default function Chat() {
     if (!file) return;
     setUploading(true);
     try {
-      const form = new FormData();
-      form.append("file", file);
-      const { data: upload } = await api.post("/upload/", form, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const mediaUrl = await uploadFile(file);
       const media_type = mediaTypeFromFile(file);
-      await sendPayload({ content: text.trim(), media_url: upload.url, media_type });
+      await sendPayload({ content: text.trim(), media_url: mediaUrl, media_type });
       setText("");
       toast.success("Media sent");
     } catch {

@@ -30,9 +30,14 @@ export default function Profile() {
   }, [username]);
 
   const follow = async () => {
-    await api.post(`/users/${profile.id}/follow/`);
-    toast.success("Following");
-    setProfile((p) => ({ ...p, is_following: true }));
+    const { data } = await api.post(`/users/${profile.id}/follow/`);
+    const following = Boolean(data.following);
+    const followStatus = data.status || null;
+    setProfile((p) => (p ? { ...p, is_following: following, follow_status: followStatus } : p));
+    toast.success(
+      following ? (followStatus === "pending" ? "Follow request sent" : "Following") : "Unfollowed"
+    );
+    load();
   };
 
   const message = async () => {
@@ -125,11 +130,14 @@ export default function Profile() {
 
       {!profile.is_me && (
         <div className="flex gap-2 mb-6">
-          {!profile.is_following && (
-            <button type="button" onClick={follow} className="btn-primary flex-1 gap-2">
-              <UserPlus size={16} /> Follow
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={follow}
+            className={`flex-1 gap-2 ${profile.is_following || profile.follow_status === "pending" ? "btn-secondary" : "btn-primary"}`}
+          >
+            <UserPlus size={16} />
+            {profile.follow_status === "pending" ? "Requested" : profile.is_following ? "Following" : "Follow"}
+          </button>
           <button type="button" onClick={message} className="btn-secondary flex-1 gap-2">
             <MessageCircle size={16} /> Message
           </button>
