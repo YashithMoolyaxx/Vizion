@@ -207,7 +207,7 @@ def move_saved_post(request, saved_id):
         old_collection.save(update_fields=["post_count"])
     return Response(SavedPostSerializer(saved, context={"request": request}).data)
 
-
+#post
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
 def batch_events(request):
