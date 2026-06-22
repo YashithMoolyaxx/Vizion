@@ -40,6 +40,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -108,26 +109,25 @@ SESSION_SAVE_EVERY_REQUEST = True
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {"hosts": [os.getenv("REDIS_URL", "redis://redis:6379/1")]},
+        "CONFIG": {"hosts": [getenv("REDIS_URL", "REDIS_TLS_URL", default="redis://redis:6379/1")]},
     }
 }
 
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": os.getenv("REDIS_CACHE_URL", "redis://redis:6379/2"),
+        "LOCATION": getenv("REDIS_CACHE_URL", "REDIS_CACHE_TLS_URL", default="redis://redis:6379/2"),
     }
 }
-
-REDIS_FEED_URL = os.getenv("REDIS_FEED_URL", "redis://redis:6379/3")
+REDIS_FEED_URL = getenv("REDIS_FEED_URL", "REDIS_FEED_TLS_URL", default="redis://redis:6379/3")
 REDIS_FEED_CELEBRITY_THRESHOLD = int(os.getenv("REDIS_FEED_CELEBRITY_THRESHOLD", "5000"))
 REDIS_FEED_ACTIVE_TTL = int(os.getenv("REDIS_FEED_ACTIVE_TTL", str(60 * 60 * 24 * 7)))
 REDIS_FEED_LOOKBACK_DAYS = int(os.getenv("REDIS_FEED_LOOKBACK_DAYS", "7"))
 REDIS_FEED_CELEBRITY_LOOKUP_LIMIT = int(os.getenv("REDIS_FEED_CELEBRITY_LOOKUP_LIMIT", "200"))
 REDIS_FEED_CACHE_LIMIT = int(os.getenv("REDIS_FEED_CACHE_LIMIT", "1000"))
 
-CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://redis:6379/0")
-CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "redis://redis:6379/0")
+CELERY_BROKER_URL = getenv("CELERY_BROKER_URL", "CELERY_BROKER_URL", "REDIS_URL", "REDIS_TLS_URL", default="redis://redis:6379/0")
+CELERY_RESULT_BACKEND = getenv("CELERY_RESULT_BACKEND", "CELERY_RESULT_BACKEND", "REDIS_URL", "REDIS_TLS_URL", default="redis://redis:6379/0")
 CELERY_BEAT_SCHEDULE = {
     "generate-post-insights-hourly": {
         "task": "social.tasks.generate_post_insights",
@@ -142,6 +142,7 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800
