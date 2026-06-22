@@ -6,6 +6,15 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
+def getenv(*names, default=None):
+    for name in names:
+        value = os.getenv(name)
+        if value is not None:
+            return value
+    return default
+
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-only-secret-key")
@@ -60,11 +69,11 @@ TEMPLATES = [
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": os.getenv("MYSQL_DATABASE", "vizion"),
-        "USER": os.getenv("MYSQL_USER", "vizion"),
-        "PASSWORD": os.getenv("MYSQL_PASSWORD", "vizion"),
-        "HOST": os.getenv("MYSQL_HOST", "mysql"),
-        "PORT": int(os.getenv("MYSQL_PORT", "3306")),
+        "NAME": getenv("MYSQL_DATABASE", "MYSQLDATABASE", default="vizion"),
+        "USER": getenv("MYSQL_USER", "MYSQLUSER", default="vizion"),
+        "PASSWORD": getenv("MYSQL_PASSWORD", "MYSQLPASSWORD", default="vizion"),
+        "HOST": getenv("MYSQL_HOST", "MYSQLHOST", default="mysql"),
+        "PORT": int(getenv("MYSQL_PORT", "MYSQLPORT", default="3306")),
         "OPTIONS": {"charset": "utf8mb4"},
     }
 }
