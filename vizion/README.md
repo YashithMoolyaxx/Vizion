@@ -57,6 +57,17 @@ Vizion is an analytics-first social media platform for creators, built with Djan
 - Set a strong `DJANGO_SECRET_KEY`, `MYSQL_ROOT_PASSWORD`, `MYSQL_PASSWORD`, and `ALLOWED_HOSTS` before going live.
 - The stack is designed to run behind `nginx` with the frontend at `/` and Django at `/api/`.
 
+### Render backend checklist
+
+- Root directory: `vizion/backend`
+- Build command: `pip install -r requirements.txt`
+- Start command: `./start.sh`
+- Health check path: `/healthz/`
+- Database: set either one MySQL URL as `MYSQL_URL`, or set `MYSQL_DATABASE`/`MYSQL_USER`/`MYSQL_PASSWORD`/`MYSQL_HOST`/`MYSQL_PORT`.
+- If using Railway MySQL, copy the public MySQL URL into `MYSQL_URL`, or copy the Railway values `MYSQLDATABASE`, `MYSQLUSER`, `MYSQLPASSWORD`, `MYSQLHOST`, and `MYSQLPORT`.
+- Do not set `MYSQL_USER`/`MYSQLUSER` to `root` unless the database dashboard says the actual app username is `root` and the password matches that same database.
+- Redis: set `REDIS_URL` or `REDIS_TLS_URL`; set `CELERY_BROKER_URL` and `CELERY_RESULT_BACKEND` to the same Redis URL unless using separate Redis databases.
+
 ## Backend development (without Docker)
 
 1. Create venv and install:

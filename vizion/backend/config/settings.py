@@ -1,9 +1,13 @@
 import os
 from datetime import timedelta
 from pathlib import Path
+from urllib.parse import unquote, urlparse
 
 from dotenv import load_dotenv
 
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+load_dotenv(BASE_DIR.parent / ".env")
 load_dotenv()
 
 
@@ -15,7 +19,23 @@ def getenv(*names, default=None):
     return default
 
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+def mysql_config_from_url(url):
+    if not url:
+        return None
+
+    parsed = urlparse(url)
+    if parsed.scheme not in {"mysql", "mysql2"}:
+        return None
+
+    return {
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": unquote(parsed.path.lstrip("/")),
+        "USER": unquote(parsed.username or ""),
+        "PASSWORD": unquote(parsed.password or ""),
+        "HOST": parsed.hostname or "",
+        "PORT": parsed.port or 3306,
+        "OPTIONS": {"charset": "utf8mb4"},
+    }
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-only-secret-key")
 DEBUG = os.getenv("DEBUG", "1") == "1"
@@ -68,7 +88,10 @@ TEMPLATES = [
 ]
 
 DATABASES = {
-    "default": {
+    "default": mysql_config_from_url(
+        getenv("MYSQL_URL", "MYSQL_PUBLIC_URL", "DATABASE_URL")
+    )
+    or {
         "ENGINE": "django.db.backends.mysql",
         "NAME": getenv("MYSQL_DATABASE", "MYSQLDATABASE", default="vizion"),
         "USER": getenv("MYSQL_USER", "MYSQLUSER", default="vizion"),
