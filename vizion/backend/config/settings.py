@@ -37,6 +37,15 @@ def mysql_config_from_url(url):
         "OPTIONS": {"charset": "utf8mb4"},
     }
 
+
+mysql_user = getenv("MYSQL_USER", "MYSQLUSER", default="vizion")
+if mysql_user == "root":
+    mysql_password = os.getenv("MYSQL_ROOT_PASSWORD") or getenv("MYSQL_PASSWORD", "MYSQLPASSWORD")
+else:
+    mysql_password = getenv("MYSQL_PASSWORD", "MYSQLPASSWORD")
+if not mysql_password:
+    mysql_password = "vizion"
+
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-only-secret-key")
 DEBUG = os.getenv("DEBUG", "1") == "1"
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "*").split(",")
@@ -94,8 +103,8 @@ DATABASES = {
     or {
         "ENGINE": "django.db.backends.mysql",
         "NAME": getenv("MYSQL_DATABASE", "MYSQLDATABASE", default="vizion"),
-        "USER": getenv("MYSQL_USER", "MYSQLUSER", default="vizion"),
-        "PASSWORD": getenv("MYSQL_PASSWORD", "MYSQLPASSWORD", default="vizion"),
+        "USER": mysql_user,
+        "PASSWORD": mysql_password,
         "HOST": getenv("MYSQL_HOST", "MYSQLHOST", default="mysql"),
         "PORT": int(getenv("MYSQL_PORT", "MYSQLPORT", default="3306")),
         "OPTIONS": {"charset": "utf8mb4"},
