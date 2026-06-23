@@ -14,9 +14,17 @@ load_dotenv()
 def getenv(*names, default=None):
     for name in names:
         value = os.getenv(name)
-        if value is not None:
+        if value:
             return value
     return default
+
+
+def getenv_with_source(*names, default=None):
+    for name in names:
+        value = os.getenv(name)
+        if value:
+            return value, name
+    return default, None
 
 
 def mysql_config_from_url(url):
@@ -38,13 +46,14 @@ def mysql_config_from_url(url):
     }
 
 
+mysql_url, mysql_url_source = getenv_with_source("MYSQL_URL", "MYSQL_PUBLIC_URL", "DATABASE_URL")
 mysql_user = getenv("MYSQL_USER", "MYSQLUSER", default="vizion")
-if mysql_user == "root":
-    mysql_password = os.getenv("MYSQL_ROOT_PASSWORD") or getenv("MYSQL_PASSWORD", "MYSQLPASSWORD")
-else:
-    mysql_password = getenv("MYSQL_PASSWORD", "MYSQLPASSWORD")
+mysql_password, mysql_password_source = getenv_with_source("MYSQLPASSWORD", "MYSQL_PASSWORD")
+if not mysql_password and mysql_user == "root":
+    mysql_password, mysql_password_source = getenv_with_source("MYSQL_ROOT_PASSWORD")
 if not mysql_password:
     mysql_password = "vizion"
+    mysql_password_source = "default"
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-only-secret-key")
 DEBUG = os.getenv("DEBUG", "1") == "1"
@@ -97,9 +106,7 @@ TEMPLATES = [
 ]
 
 DATABASES = {
-    "default": mysql_config_from_url(
-        getenv("MYSQL_URL", "MYSQL_PUBLIC_URL", "DATABASE_URL")
-    )
+    "default": mysql_config_from_url(mysql_url)
     or {
         "ENGINE": "django.db.backends.mysql",
         "NAME": getenv("MYSQL_DATABASE", "MYSQLDATABASE", default="vizion"),
@@ -110,6 +117,7 @@ DATABASES = {
         "OPTIONS": {"charset": "utf8mb4"},
     }
 }
+DATABASE_PASSWORD_SOURCE = mysql_url_source if mysql_url else mysql_password_source
 
 AUTH_USER_MODEL = "users.User"
 

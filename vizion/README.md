@@ -66,7 +66,7 @@ Vizion is an analytics-first social media platform for creators, built with Djan
 - Database: set either one MySQL URL as `MYSQL_URL`, or set `MYSQL_DATABASE`/`MYSQL_USER`/`MYSQL_PASSWORD`/`MYSQL_HOST`/`MYSQL_PORT`.
 - If using Railway MySQL, copy the public MySQL URL into `MYSQL_URL`, or copy the Railway values `MYSQLDATABASE`, `MYSQLUSER`, `MYSQLPASSWORD`, `MYSQLHOST`, and `MYSQLPORT`.
 - Do not set `MYSQL_USER`/`MYSQLUSER` to `root` unless the database dashboard says the actual app username is `root` and the password matches that same database.
-- If the database user is `root`, set `MYSQL_ROOT_PASSWORD`; the app uses that before `MYSQL_PASSWORD`/`MYSQLPASSWORD`.
+- If the database user is `root`, the app still prefers Railway's `MYSQLPASSWORD`; `MYSQL_ROOT_PASSWORD` is only a fallback.
 - Redis: set `REDIS_URL` or `REDIS_TLS_URL`; set `CELERY_BROKER_URL` and `CELERY_RESULT_BACKEND` to the same Redis URL unless using separate Redis databases.
 
 ## Backend development (without Docker)

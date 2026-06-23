@@ -14,7 +14,8 @@ print(
     f"user={db.get('USER')} "
     f"host={db.get('HOST')} "
     f"port={db.get('PORT')} "
-    f"name={db.get('NAME')}"
+    f"name={db.get('NAME')} "
+    f"password_source={getattr(settings, 'DATABASE_PASSWORD_SOURCE', 'unknown')}"
 )
 PY
 
